@@ -8,14 +8,20 @@ import com.bupt.utkvr.module_division.model.classBodyDeclaration.ConstructorDecl
 import com.bupt.utkvr.module_division.model.classBodyDeclaration.MethodDeclaration;
 import com.bupt.utkvr.module_division.model.classDeclaration.ClassDeclaration;
 import com.bupt.utkvr.module_division.model.classDeclaration.CompilationUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class ExtractJavaVisitor extends JavaBaseVisitor {
 
-    CompilationUnit compilationUnit = new CompilationUnit();
+    CompilationUnit compilationUnit;
+
+    public ExtractJavaVisitor(CompilationUnit compilationUnit) {
+        this.compilationUnit = compilationUnit;
+    }
 
     @Override
     public Object visitCompilationUnit(JavaParser.CompilationUnitContext ctx) {
@@ -117,12 +123,21 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
                     JavaParser.MemberContext context = (JavaParser.MemberContext) child;
                     Object visit = visit(context);
                     if(visit != null) {
-                        ClassBodyMember classBodyMember =(ClassBodyMember) visit(context);
+                        ClassBodyMember classBodyMember =(ClassBodyMember) visit;
+                        classBodyMember.setModifiers(modifiers);
+                        boolean re = classBody.addMember(classBodyMember);
+                        if(!re) log.error("文件"+compilationUnit.getFileName()+"的member:"+classBodyMember+":加入classBody失败");
                     }
+                    modifiers = new String();
                 }
                 if(child instanceof JavaParser.BlockContext) {
                     JavaParser.BlockContext context = (JavaParser.BlockContext) child;
-
+                    Object visit = visit(context);
+                    if(visit != null) {
+                        ClassBodyMember classBodyMember =(ClassBodyMember) visit;
+                        boolean re = classBody.addMember(classBodyMember);
+                        if(!re) log.error("文件"+compilationUnit.getFileName()+"的block:"+classBodyMember+":加入classBody失败");
+                    }
                 }
             }
         }
@@ -158,29 +173,61 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
     }
 
     @Override
-    public MethodDeclaration visitMethodDeclaration(JavaParser.MethodDeclarationContext ctx) {
+    public ClassBodyMember visitBlock(JavaParser.BlockContext ctx) {
+        ClassBodyMember member;
+        for (ParseTree child : ctx.children) {
+            if(child instanceof JavaParser.BlockStatementContext) {
+                JavaParser.BlockStatementContext context = (JavaParser.BlockStatementContext) child;
+                member = (ClassBodyMember) visit(context);
+                return member;
+            }
+        }
+        return null;
 
+    }
 
+    @Override
+    public ClassBodyMember visitBlockStatement(JavaParser.BlockStatementContext ctx) {
+        ClassBodyMember member;
+        for (ParseTree child : ctx.children) {
+            if(child instanceof JavaParser.ClassDeclarationContext) {
+                JavaParser.ClassDeclarationContext context = (JavaParser.ClassDeclarationContext) child;
+                member = (ClassBodyMember) visit(context);
+                return member;
+            }
+        }
         return null;
     }
 
     @Override
-    public Object visitMethodDeclarationRest(JavaParser.MethodDeclarationRestContext ctx) {
-        return super.visitMethodDeclarationRest(ctx);
+    public MethodDeclaration visitMethodDeclaration(JavaParser.MethodDeclarationContext ctx) {
+        MethodDeclaration method = new MethodDeclaration();
+        if(ctx.type() == null) {
+            method.setType("void");
+        } else {
+            method.setType(ctx.type().getText());
+        }
+        method.setMethodName(ctx.Identifier().getText());
+        method.setParameters(ctx.formalParameters().getText());
+        JavaParser.MethodBodyContext methodBodyContext = ctx.methodDeclarationRest().methodBody();
+        if(methodBodyContext != null) {
+            String body = methodBodyContext.getText();
+            method.setMethodBody(body);
+        }
+        return method;
     }
 
     @Override
-    public Object visitGenericMethodDeclaration(JavaParser.GenericMethodDeclarationContext ctx) {
-        return super.visitGenericMethodDeclaration(ctx);
+    public ConstructorDeclaration visitConstructorDeclaration(JavaParser.ConstructorDeclarationContext ctx) {
+        ConstructorDeclaration constructor = new ConstructorDeclaration();
+        JavaParser.TypeParametersContext typeParameters = ctx.typeParameters();
+        if(typeParameters != null) {
+            constructor.setTypeParameters(typeParameters.getText());
+        }
+        constructor.setName(ctx.Identifier().getText());
+        constructor.setParameters(ctx.formalParameters().getText());
+        constructor.setConstructorBody(ctx.constructorBody().getText());
+        return constructor;
     }
 
-    @Override
-    public Object visitConstructorDeclaration(JavaParser.ConstructorDeclarationContext ctx) {
-        return super.visitConstructorDeclaration(ctx);
-    }
-
-    @Override
-    public Object visitVoidMethodDeclaratorRest(JavaParser.VoidMethodDeclaratorRestContext ctx) {
-        return super.visitVoidMethodDeclaratorRest(ctx);
-    }
 }

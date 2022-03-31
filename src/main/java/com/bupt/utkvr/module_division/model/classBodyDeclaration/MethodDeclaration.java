@@ -1,6 +1,5 @@
 package com.bupt.utkvr.module_division.model.classBodyDeclaration;
 
-import com.bupt.utkvr.module_division.model.ParameterDeclaration;
 import lombok.Data;
 
 import java.util.List;
@@ -18,6 +17,15 @@ public class MethodDeclaration implements ClassBodyMember {
     private String methodName;
 
     //入参
-    private List<ParameterDeclaration> parameters;
+    //private List<ParameterDeclaration> parameters;
+    private String parameters;
+
+    //函数体
+    private String methodBody;
+
+    @Override
+    public void setModifiers(String str) {
+
+    }
 
 }

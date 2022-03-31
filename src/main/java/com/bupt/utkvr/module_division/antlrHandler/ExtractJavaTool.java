@@ -3,7 +3,7 @@ package com.bupt.utkvr.module_division.antlrHandler;
 import com.bupt.utkvr.module_division.antlr.javaAntlr.JavaLexer;
 import com.bupt.utkvr.module_division.antlr.javaAntlr.JavaParser;
 import com.bupt.utkvr.module_division.model.JavaFile;
-import com.bupt.utkvr.module_division.model.ParameterDeclaration;
+import com.bupt.utkvr.module_division.model.classBodyDeclaration.ParameterDeclaration;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;

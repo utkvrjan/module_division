@@ -25,4 +25,9 @@ public class ClassDeclaration implements FileTypeDeclaration, ClassBodyMember {
 
     //类体
     private ClassBody classBody;
+
+    @Override
+    public void setModifiers(String str) {
+
+    }
 }

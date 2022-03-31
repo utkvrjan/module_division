@@ -1,4 +1,4 @@
-package com.bupt.utkvr.module_division.model;
+package com.bupt.utkvr.module_division.model.classBodyDeclaration;
 
 import lombok.Data;
 

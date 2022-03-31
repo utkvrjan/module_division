@@ -22,4 +22,6 @@ public class CompilationUnit {
     private String fileType;  // class , interface , enum
 
     private FileTypeDeclaration fileTypeDeclaration;
+
+    private String fileName;
 }
