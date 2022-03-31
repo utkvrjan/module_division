@@ -24,4 +24,8 @@ public class CompilationUnit {
     private FileTypeDeclaration fileTypeDeclaration;
 
     private String fileName;
+
+    public CompilationUnit(String fileName) {
+        this.fileName = fileName;
+    }
 }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.bupt.utkvr.module_division.antlrHandler.ExtractJavaTool;
 import com.bupt.utkvr.module_division.model.Folder;
 import com.bupt.utkvr.module_division.model.JavaFile;
+import com.bupt.utkvr.module_division.model.classDeclaration.CompilationUnit;
 import com.bupt.utkvr.module_division.service.FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class FileServiceImpl implements FileService {
             log.warn("文件夹是空的!");
         }
         List<Folder> childFolders = new ArrayList<>();
-        List<JavaFile> documents = new ArrayList<>();
+        List<CompilationUnit> documents = new ArrayList<>();
         for (File file : files) {
             if (file.isDirectory()) {
                 log.info("遍历到文件夹:" + file.getAbsolutePath());
@@ -39,8 +40,8 @@ public class FileServiceImpl implements FileService {
             }
             if(file.isFile()) {
                 log.info("遍历到文件:" + file.getAbsolutePath());
-                JavaFile javaFile = filePartition(file);
-                documents.add(javaFile);
+                CompilationUnit compilationUnit = filePartition(file);
+                documents.add(compilationUnit);
             }
         }
         resFolder.setChildFolders(childFolders);
@@ -49,10 +50,10 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public JavaFile filePartition(File file) throws IOException {
-        if(!file.getName().endsWith(".java")) return new JavaFile(file.getName(),new ArrayList<>());
-        JavaFile javaFile = ExtractJavaTool.getfilePartiton(file);
-        return javaFile;
+    public CompilationUnit filePartition(File file) throws IOException {
+        if(!file.getName().endsWith(".java")) return new CompilationUnit(file.getName());
+        CompilationUnit compilationUnit = ExtractJavaTool.getfilePartiton(file);
+        return compilationUnit;
     }
 
 

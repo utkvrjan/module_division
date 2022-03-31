@@ -4,6 +4,7 @@ import com.bupt.utkvr.module_division.antlr.javaAntlr.JavaLexer;
 import com.bupt.utkvr.module_division.antlr.javaAntlr.JavaParser;
 import com.bupt.utkvr.module_division.model.JavaFile;
 import com.bupt.utkvr.module_division.model.classBodyDeclaration.ParameterDeclaration;
+import com.bupt.utkvr.module_division.model.classDeclaration.CompilationUnit;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExtractJavaTool {
-    public static JavaFile getfilePartiton(File file) throws IOException {
+    public static CompilationUnit getfilePartiton(File file) throws IOException {
         FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
         ANTLRInputStream input = new ANTLRInputStream(fileInputStream);
         JavaLexer lexer = new JavaLexer(input);
@@ -26,10 +27,14 @@ public class ExtractJavaTool {
         ParseTree tree = parser.compilationUnit();
 
         ParseTreeWalker walker = new ParseTreeWalker();
-        JavaFile javaFile = new JavaFile(file.getName(),new ArrayList<>());
-        ExtractJavaListener javaListener = new ExtractJavaListener(parser,javaFile);
-        walker.walk(javaListener,tree);
-        return javaListener.getJavaFile();
+//        JavaFile javaFile = new JavaFile(file.getName(),new ArrayList<>());
+//        ExtractJavaListener javaListener = new ExtractJavaListener(parser,javaFile);
+//        walker.walk(javaListener,tree);
+//        return javaListener.getJavaFile();
+        CompilationUnit compilationUnit = new CompilationUnit(file.getName());
+        ExtractJavaVisitor javaVisitor = new ExtractJavaVisitor(compilationUnit);
+        javaVisitor.visit(tree);
+        return javaVisitor.getCompilationUnit();
     }
 
     public static List<ParameterDeclaration> getParameterByDecls(JavaParser.FormalParameterDeclsContext formalParameterDeclsContext,

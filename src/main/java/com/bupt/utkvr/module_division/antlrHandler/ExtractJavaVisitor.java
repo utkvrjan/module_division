@@ -17,7 +17,15 @@ import java.util.List;
 @Slf4j
 public class ExtractJavaVisitor extends JavaBaseVisitor {
 
-    CompilationUnit compilationUnit;
+    private CompilationUnit compilationUnit;
+
+    public CompilationUnit getCompilationUnit() {
+        return compilationUnit;
+    }
+
+    public void setCompilationUnit(CompilationUnit compilationUnit) {
+        this.compilationUnit = compilationUnit;
+    }
 
     public ExtractJavaVisitor(CompilationUnit compilationUnit) {
         this.compilationUnit = compilationUnit;

@@ -1,5 +1,6 @@
 package com.bupt.utkvr.module_division.antlrHandler;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bupt.utkvr.module_division.antlr.javaAntlr.JavaBaseListener;
 import com.bupt.utkvr.module_division.antlr.javaAntlr.JavaParser;
 import com.bupt.utkvr.module_division.model.JavaFile;
@@ -9,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.TokenStream;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -77,7 +80,8 @@ public class ExtractJavaListener extends JavaBaseListener {
         if(formalParameterDeclsContext != null) {
             parameterList = ExtractJavaTool.getParameterByDecls(formalParameterDeclsContext, parser, list);
         }
-        methodDeclaration.setParameters(parameterList);
+        //todo 监听器这个位置需要改。
+        methodDeclaration.setParameters(JSONObject.toJSONString(parameterList));
         javaFile.getMethodDeclarations().add(methodDeclaration);
     }
 
