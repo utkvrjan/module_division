@@ -605,7 +605,7 @@ public interface JavaVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConstantExpression(JavaParser.ConstantExpressionContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link JavaParser}.
+	 * Visit a parse tree produced by {@link JavaParser#expression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

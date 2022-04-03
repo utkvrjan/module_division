@@ -49,4 +49,16 @@ public class ExtractJavaTool {
         if(paramDecls == null)  return list;
         return getParameterByDecls(paramDecls,parser,list);
     }
+
+    public static String textToString(ParseTree tree) {
+        String res = new String();
+        int count = tree.getChildCount();
+        if(count == 0) return tree.getText();
+        for (int i = 0; i < count; i++) {
+            res+=tree.getChild(i).getText();
+            res+=" ";
+        }
+        return res;
+    }
+
 }

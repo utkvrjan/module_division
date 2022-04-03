@@ -65,6 +65,7 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
     @Override
     public ClassDeclaration visitTypeDeclaration(JavaParser.TypeDeclarationContext ctx) {
 
+        //todo
         boolean isPublic = false;
 
         for (ParseTree child : ctx.children) {
@@ -80,11 +81,15 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
             //如果是接口文件
             if(child instanceof JavaParser.InterfaceDeclarationContext) {
                 compilationUnit.setFileType("interface");
+                JavaParser.InterfaceDeclarationContext context = (JavaParser.InterfaceDeclarationContext) child;
+                visit(context);
                 return null;
             }
             //如果是枚举文件
             if(child instanceof JavaParser.EnumDeclarationContext) {
                 compilationUnit.setFileType("enum");
+                JavaParser.EnumDeclarationContext context = (JavaParser.EnumDeclarationContext) child;
+                visit(context);
                 return null;
             }
         }
@@ -98,7 +103,8 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
         for (ParseTree child : ctx.children) {
             if(child instanceof JavaParser.TypeParametersContext) {
                 JavaParser.TypeParametersContext context = (JavaParser.TypeParametersContext) child;
-                classDeclaration.setGenericType(context.getText());
+                String str = ExtractJavaTool.textToString(context);
+                classDeclaration.setGenericType(str);
             }
             if(child instanceof JavaParser.TypeContext) {
                 JavaParser.TypeContext context = (JavaParser.TypeContext) child;
@@ -125,7 +131,7 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
             for (ParseTree child : classBodyDeclarationContext.children) {
                 if(child instanceof JavaParser.ModifiersContext) {
                     JavaParser.ModifiersContext context = (JavaParser.ModifiersContext) child;
-                    modifiers = context.getText();
+                    modifiers = ExtractJavaTool.textToString(context);
                 }
                 if(child instanceof JavaParser.MemberContext) {
                     JavaParser.MemberContext context = (JavaParser.MemberContext) child;
@@ -149,7 +155,7 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
                 }
             }
         }
-        return null;
+        return classBody;
     }
 
     @Override
@@ -175,6 +181,14 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
                 JavaParser.ClassDeclarationContext context = (JavaParser.ClassDeclarationContext) child;
                 member = (ClassDeclaration) visit(context);
                 return member;
+            }
+            if(child instanceof JavaParser.FieldDeclarationContext) {
+                JavaParser.FieldDeclarationContext context = (JavaParser.FieldDeclarationContext) child;
+                visit(context);
+            }
+            if(child instanceof JavaParser.InterfaceDeclarationContext) {
+                JavaParser.InterfaceDeclarationContext context = (JavaParser.InterfaceDeclarationContext) child;
+                visit(context);
             }
         }
         return null;
@@ -203,12 +217,25 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
                 member = (ClassBodyMember) visit(context);
                 return member;
             }
+            if(child instanceof JavaParser.LocalVariableDeclarationStatementContext) {
+                JavaParser.LocalVariableDeclarationStatementContext context = (JavaParser.LocalVariableDeclarationStatementContext) child;
+                visit(context);
+            }
+            if(child instanceof JavaParser.InterfaceDeclarationContext) {
+                JavaParser.InterfaceDeclarationContext context = (JavaParser.InterfaceDeclarationContext) child;
+                visit(context);
+            }
+            if(child instanceof JavaParser.StatementContext) {
+                JavaParser.StatementContext context = (JavaParser.StatementContext) child;
+                visit(context);
+            }
         }
         return null;
     }
 
     @Override
     public MethodDeclaration visitMethodDeclaration(JavaParser.MethodDeclarationContext ctx) {
+        visitChildren(ctx);
         MethodDeclaration method = new MethodDeclaration();
         if(ctx.type() == null) {
             method.setType("void");
@@ -216,10 +243,11 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
             method.setType(ctx.type().getText());
         }
         method.setMethodName(ctx.Identifier().getText());
-        method.setParameters(ctx.formalParameters().getText());
+        String formalParameter = ExtractJavaTool.textToString(ctx.formalParameters());
+        method.setParameters(formalParameter);
         JavaParser.MethodBodyContext methodBodyContext = ctx.methodDeclarationRest().methodBody();
         if(methodBodyContext != null) {
-            String body = methodBodyContext.getText();
+            String body = ExtractJavaTool.textToString(methodBodyContext);
             method.setMethodBody(body);
         }
         return method;
@@ -227,6 +255,7 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
 
     @Override
     public ConstructorDeclaration visitConstructorDeclaration(JavaParser.ConstructorDeclarationContext ctx) {
+        visitChildren(ctx);
         ConstructorDeclaration constructor = new ConstructorDeclaration();
         JavaParser.TypeParametersContext typeParameters = ctx.typeParameters();
         if(typeParameters != null) {
@@ -234,7 +263,8 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
         }
         constructor.setName(ctx.Identifier().getText());
         constructor.setParameters(ctx.formalParameters().getText());
-        constructor.setConstructorBody(ctx.constructorBody().getText());
+        String constructorBody = ExtractJavaTool.textToString(ctx.constructorBody());
+        constructor.setConstructorBody(constructorBody);
         return constructor;
     }
 

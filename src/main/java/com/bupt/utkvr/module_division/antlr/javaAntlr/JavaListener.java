@@ -998,12 +998,12 @@ public interface JavaListener extends ParseTreeListener {
 	 */
 	void exitConstantExpression(JavaParser.ConstantExpressionContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link JavaParser}.
+	 * Enter a parse tree produced by {@link JavaParser#expression}.
 	 * @param ctx the parse tree
 	 */
 	void enterExpression(JavaParser.ExpressionContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link JavaParser}.
+	 * Exit a parse tree produced by {@link JavaParser#expression}.
 	 * @param ctx the parse tree
 	 */
 	void exitExpression(JavaParser.ExpressionContext ctx);

@@ -275,7 +275,7 @@ variableModifier
     ;
 
 typeArguments
-    :   '<' typeArgument (',' typeArgument)* '>'
+    :   '<' typeArgument? (',' typeArgument)* '>'
     ;
 
 typeArgument

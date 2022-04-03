@@ -13,5 +13,5 @@ public interface FileService {
 
     public CompilationUnit filePartition(File file) throws IOException;
 
-    public String processingFolder(String path);
+    public Folder processingFolder(String path);
 }
