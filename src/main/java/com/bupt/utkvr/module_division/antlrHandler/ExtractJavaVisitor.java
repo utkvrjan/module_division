@@ -8,14 +8,28 @@ import com.bupt.utkvr.module_division.model.classBodyDeclaration.ConstructorDecl
 import com.bupt.utkvr.module_division.model.classBodyDeclaration.MethodDeclaration;
 import com.bupt.utkvr.module_division.model.classDeclaration.ClassDeclaration;
 import com.bupt.utkvr.module_division.model.classDeclaration.CompilationUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class ExtractJavaVisitor extends JavaBaseVisitor {
 
-    CompilationUnit compilationUnit = new CompilationUnit();
+    private CompilationUnit compilationUnit;
+
+    public CompilationUnit getCompilationUnit() {
+        return compilationUnit;
+    }
+
+    public void setCompilationUnit(CompilationUnit compilationUnit) {
+        this.compilationUnit = compilationUnit;
+    }
+
+    public ExtractJavaVisitor(CompilationUnit compilationUnit) {
+        this.compilationUnit = compilationUnit;
+    }
 
     @Override
     public Object visitCompilationUnit(JavaParser.CompilationUnitContext ctx) {
@@ -51,6 +65,7 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
     @Override
     public ClassDeclaration visitTypeDeclaration(JavaParser.TypeDeclarationContext ctx) {
 
+        //todo
         boolean isPublic = false;
 
         for (ParseTree child : ctx.children) {
@@ -66,11 +81,15 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
             //如果是接口文件
             if(child instanceof JavaParser.InterfaceDeclarationContext) {
                 compilationUnit.setFileType("interface");
+                JavaParser.InterfaceDeclarationContext context = (JavaParser.InterfaceDeclarationContext) child;
+                visit(context);
                 return null;
             }
             //如果是枚举文件
             if(child instanceof JavaParser.EnumDeclarationContext) {
                 compilationUnit.setFileType("enum");
+                JavaParser.EnumDeclarationContext context = (JavaParser.EnumDeclarationContext) child;
+                visit(context);
                 return null;
             }
         }
@@ -84,7 +103,8 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
         for (ParseTree child : ctx.children) {
             if(child instanceof JavaParser.TypeParametersContext) {
                 JavaParser.TypeParametersContext context = (JavaParser.TypeParametersContext) child;
-                classDeclaration.setGenericType(context.getText());
+                String str = ExtractJavaTool.textToString(context);
+                classDeclaration.setGenericType(str);
             }
             if(child instanceof JavaParser.TypeContext) {
                 JavaParser.TypeContext context = (JavaParser.TypeContext) child;
@@ -111,22 +131,31 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
             for (ParseTree child : classBodyDeclarationContext.children) {
                 if(child instanceof JavaParser.ModifiersContext) {
                     JavaParser.ModifiersContext context = (JavaParser.ModifiersContext) child;
-                    modifiers = context.getText();
+                    modifiers = ExtractJavaTool.textToString(context);
                 }
                 if(child instanceof JavaParser.MemberContext) {
                     JavaParser.MemberContext context = (JavaParser.MemberContext) child;
                     Object visit = visit(context);
                     if(visit != null) {
-                        ClassBodyMember classBodyMember =(ClassBodyMember) visit(context);
+                        ClassBodyMember classBodyMember =(ClassBodyMember) visit;
+                        classBodyMember.setModifiers(modifiers);
+                        boolean re = classBody.addMember(classBodyMember);
+                        if(!re) log.error("文件"+compilationUnit.getFileName()+"的member:"+classBodyMember+":加入classBody失败");
                     }
+                    modifiers = new String();
                 }
                 if(child instanceof JavaParser.BlockContext) {
                     JavaParser.BlockContext context = (JavaParser.BlockContext) child;
-
+                    Object visit = visit(context);
+                    if(visit != null) {
+                        ClassBodyMember classBodyMember =(ClassBodyMember) visit;
+                        boolean re = classBody.addMember(classBodyMember);
+                        if(!re) log.error("文件"+compilationUnit.getFileName()+"的block:"+classBodyMember+":加入classBody失败");
+                    }
                 }
             }
         }
-        return null;
+        return classBody;
     }
 
     @Override
@@ -153,34 +182,90 @@ public class ExtractJavaVisitor extends JavaBaseVisitor {
                 member = (ClassDeclaration) visit(context);
                 return member;
             }
+            if(child instanceof JavaParser.FieldDeclarationContext) {
+                JavaParser.FieldDeclarationContext context = (JavaParser.FieldDeclarationContext) child;
+                visit(context);
+            }
+            if(child instanceof JavaParser.InterfaceDeclarationContext) {
+                JavaParser.InterfaceDeclarationContext context = (JavaParser.InterfaceDeclarationContext) child;
+                visit(context);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public ClassBodyMember visitBlock(JavaParser.BlockContext ctx) {
+        ClassBodyMember member;
+        for (ParseTree child : ctx.children) {
+            if(child instanceof JavaParser.BlockStatementContext) {
+                JavaParser.BlockStatementContext context = (JavaParser.BlockStatementContext) child;
+                member = (ClassBodyMember) visit(context);
+                return member;
+            }
+        }
+        return null;
+
+    }
+
+    @Override
+    public ClassBodyMember visitBlockStatement(JavaParser.BlockStatementContext ctx) {
+        ClassBodyMember member;
+        for (ParseTree child : ctx.children) {
+            if(child instanceof JavaParser.ClassDeclarationContext) {
+                JavaParser.ClassDeclarationContext context = (JavaParser.ClassDeclarationContext) child;
+                member = (ClassBodyMember) visit(context);
+                return member;
+            }
+            if(child instanceof JavaParser.LocalVariableDeclarationStatementContext) {
+                JavaParser.LocalVariableDeclarationStatementContext context = (JavaParser.LocalVariableDeclarationStatementContext) child;
+                visit(context);
+            }
+            if(child instanceof JavaParser.InterfaceDeclarationContext) {
+                JavaParser.InterfaceDeclarationContext context = (JavaParser.InterfaceDeclarationContext) child;
+                visit(context);
+            }
+            if(child instanceof JavaParser.StatementContext) {
+                JavaParser.StatementContext context = (JavaParser.StatementContext) child;
+                visit(context);
+            }
         }
         return null;
     }
 
     @Override
     public MethodDeclaration visitMethodDeclaration(JavaParser.MethodDeclarationContext ctx) {
-
-
-        return null;
+        visitChildren(ctx);
+        MethodDeclaration method = new MethodDeclaration();
+        if(ctx.type() == null) {
+            method.setType("void");
+        } else {
+            method.setType(ctx.type().getText());
+        }
+        method.setMethodName(ctx.Identifier().getText());
+        String formalParameter = ExtractJavaTool.textToString(ctx.formalParameters());
+        method.setParameters(formalParameter);
+        JavaParser.MethodBodyContext methodBodyContext = ctx.methodDeclarationRest().methodBody();
+        if(methodBodyContext != null) {
+            String body = ExtractJavaTool.textToString(methodBodyContext);
+            method.setMethodBody(body);
+        }
+        return method;
     }
 
     @Override
-    public Object visitMethodDeclarationRest(JavaParser.MethodDeclarationRestContext ctx) {
-        return super.visitMethodDeclarationRest(ctx);
+    public ConstructorDeclaration visitConstructorDeclaration(JavaParser.ConstructorDeclarationContext ctx) {
+        visitChildren(ctx);
+        ConstructorDeclaration constructor = new ConstructorDeclaration();
+        JavaParser.TypeParametersContext typeParameters = ctx.typeParameters();
+        if(typeParameters != null) {
+            constructor.setTypeParameters(typeParameters.getText());
+        }
+        constructor.setName(ctx.Identifier().getText());
+        constructor.setParameters(ctx.formalParameters().getText());
+        String constructorBody = ExtractJavaTool.textToString(ctx.constructorBody());
+        constructor.setConstructorBody(constructorBody);
+        return constructor;
     }
 
-    @Override
-    public Object visitGenericMethodDeclaration(JavaParser.GenericMethodDeclarationContext ctx) {
-        return super.visitGenericMethodDeclaration(ctx);
-    }
-
-    @Override
-    public Object visitConstructorDeclaration(JavaParser.ConstructorDeclarationContext ctx) {
-        return super.visitConstructorDeclaration(ctx);
-    }
-
-    @Override
-    public Object visitVoidMethodDeclaratorRest(JavaParser.VoidMethodDeclaratorRestContext ctx) {
-        return super.visitVoidMethodDeclaratorRest(ctx);
-    }
 }
