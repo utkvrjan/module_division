@@ -19,8 +19,10 @@ public class FileContoller {
     @ResponseBody
     public Object moduleDivision(Integer roleId) {
         JSONObject jsonObject = new JSONObject();
-        String path = "E:\\IdeaProjects3\\permissiondemo2\\src\\main\\java";
-        Folder res = fileService.processingFolder(path);
+        String path1 = "E:\\module_division\\src\\main\\java\\com\\bupt\\utkvr\\module_division";
+        String path2 = "E:\\module_division\\src\\main\\java\\com\\bupt\\utkvr\\module_division\\antlr";
+        String path3 = "E:\\module_division\\src\\main\\java\\com\\bupt\\utkvr\\module_division\\model";
+        Folder res = fileService.processingFolder(path3);
         return JSONObject.toJSON(res);
 
     }
